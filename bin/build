@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#/ Usage: bin/build [<configuration>]
+#/ Description: Builds the PostHog solution - PostHog.sln.
+#/ Arguments:
+#/   <configuration> - The configuration to build. Defaults to Debug.
+source bin/helpers/_utils.sh
+set_source_and_root_dir
+
+cargo build --target wasm32-unknown-unknown
