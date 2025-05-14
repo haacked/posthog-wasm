@@ -54,6 +54,31 @@ pub extern "C" fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
+extern "C" {
+    fn http_post(ptr: *const u8, len: usize) -> u32;
+    fn http_post_len() -> usize;
+}
+#[no_mangle]
+pub extern "C" fn capture(ptr: *const u8, len: usize) -> *mut u8 {
+    unsafe {
+        // Read input URL
+        let input = str::from_utf8_unchecked(slice::from_raw_parts(ptr, len));
+
+        // Call host
+        let resp_ptr = http_post(ptr, len);
+        let resp_len = http_post_len();
+
+        // Read host's response
+        let resp = slice::from_raw_parts(resp_ptr as *const u8, resp_len);
+        let result = format!("Captured from {}:\n{}", input, str::from_utf8_unchecked(resp));
+
+        let out_ptr = alloc(result.len());
+        core::ptr::copy_nonoverlapping(result.as_ptr(), out_ptr, result.len());
+        out_ptr
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
