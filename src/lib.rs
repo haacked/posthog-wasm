@@ -11,9 +11,34 @@ pub struct HttpResponse {
 }
 
 #[no_mangle]
+pub extern "C" fn allocate(size: usize) -> *mut u8 {
+    // Create a new vector with the specified size
+    let mut buffer = Vec::with_capacity(size);
+    // Ensure the vector has the exact size we want
+    buffer.resize(size, 0);
+    // Get the pointer to the vector's buffer
+    let ptr = buffer.as_mut_ptr();
+    // Prevent the vector from being deallocated
+    std::mem::forget(buffer);
+    // Return the pointer
+    ptr
+}
+
+#[no_mangle]
+pub extern "C" fn deallocate(ptr: *mut u8, size: usize) {
+    unsafe {
+        let _ = Vec::from_raw_parts(ptr, size, size);
+        // Vector is dropped here, freeing the memory
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn fetch_url(url_ptr: *const u8, url_len: usize) -> HttpResponse {
-    println!("fetch_url url_ptr: {:?}", url_ptr);
-    println!("fetch_url url_len: {:?}", url_len);
+    // Convert the raw pointer to a string slice
+    let url_bytes = unsafe { std::slice::from_raw_parts(url_ptr, url_len) };
+    let url = std::str::from_utf8(url_bytes).unwrap_or("invalid url");
+    
+    println!("fetch_url called with: {}", url);
 
     let message = "Success".to_string();
     let body_vec = message.into_bytes();
