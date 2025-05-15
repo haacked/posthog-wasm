@@ -1,4 +1,3 @@
-// src/lib.rs
 #![no_std]
 extern crate alloc;
 
@@ -43,6 +42,7 @@ extern "C" {
         body_len: usize,
     ) -> *const u8;
     fn http_request_len() -> usize;
+    fn log_message(message: *const u8, message_len: usize);
 }
 
 // Helper function to merge two serde_json::Value instances.
@@ -92,6 +92,9 @@ pub extern "C" fn capture(
 
         let properties_slice = slice::from_raw_parts(properties_ptr, properties_len);
         let properties_str = str::from_utf8(properties_slice).unwrap_or("{}");
+
+        log("User provided properties: ");
+        log(properties_str);
 
         let user_provided_properties: Value =
             serde_json::from_str(properties_str).unwrap_or_else(|_| Value::Object(Map::new())); // Default to empty object
@@ -147,6 +150,12 @@ fn send_event(
         let out_ptr = alloc_buffer(resp_len);
         core::ptr::copy_nonoverlapping(resp_ptr, out_ptr, resp_len);
         out_ptr
+    }
+}
+
+fn log(message: &str) {
+    unsafe {
+        log_message(message.as_ptr(), message.len());
     }
 }
 
