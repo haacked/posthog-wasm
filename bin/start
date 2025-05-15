@@ -10,8 +10,8 @@ DEFAULT_POSTHOG_HOST="http://localhost:8000"
 DEFAULT_POSTHOG_API_KEY="phc_jtUhKM2jBb9bN31USuNxqs2IiR2w43EgqC6AY4iaWVo"
 
 # Use provided arguments or defaults
-POSTHOG_HOST="${1:-$DEFAULT_POSTHOG_HOST}"
-POSTHOG_API_KEY="${2:-$DEFAULT_POSTHOG_API_KEY}"
+export POSTHOG_HOST="${1:-$DEFAULT_POSTHOG_HOST}"
+export POSTHOG_API_KEY="${2:-$DEFAULT_POSTHOG_API_KEY}"
 
 echo "-------------------------------------------"
 echo "WELCOME TO THE POSTHOG WASM HACKATHON DEMO!"
@@ -19,13 +19,13 @@ echo "-------------------------------------------"
 
 
 bin/deploy
-pushd ./dotnet > /dev/null
+pushd go > /dev/null
 # Add this line to prompt the user
 read -p "Are you ready for the 💥?"
 
 echo "+===========================================+"
-echo "C# code calling WASM written in Rust"
-dotnet run "$POSTHOG_HOST" "$POSTHOG_API_KEY"
+echo "Go code calling WASM written in Rust"
+./posthog
 echo "+===========================================+"
 popd > /dev/null
 

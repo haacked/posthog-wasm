@@ -12,6 +12,7 @@ We considered compiling Rust to portable libraries, but each library has to be.
 
 - Sidecar service (called through http):
 - Compile to platform specific dlls: deployment is painful.
+- Use extism to wrap primitive type. (Check extism branch to see a live example)
 
 ## Lessons learned
 
@@ -71,8 +72,8 @@ In Rust:
 
 ```rust
 extern "C" {
-    fn http_request(url_ptr: *const u8, url_len: usize, 
-                    method_ptr: *const u8, method_len: usize, 
+    fn http_request(url_ptr: *const u8, url_len: usize,
+                    method_ptr: *const u8, method_len: usize,
                     body_ptr: *const u8, body_len: usize) -> *const u8;
     fn http_request_len() -> usize;
 }

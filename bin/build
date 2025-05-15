@@ -10,6 +10,6 @@ pushd rust > /dev/null
 cargo build --target wasm32-unknown-unknown
 popd > /dev/null
 
-pushd dotnet > /dev/null
-dotnet build
+pushd go > /dev/null
+go build .
 popd > /dev/null
