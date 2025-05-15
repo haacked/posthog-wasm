@@ -93,7 +93,6 @@ pub extern "C" fn capture(
         let properties_slice = slice::from_raw_parts(properties_ptr, properties_len);
         let properties_str = str::from_utf8(properties_slice).unwrap_or("{}");
 
-        log("User provided properties: ");
         log(properties_str);
 
         let user_provided_properties: Value =
