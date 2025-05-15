@@ -8,4 +8,5 @@ set_source_and_root_dir
 bin/build
 pushd ./rust > /dev/null
 cp target/wasm32-unknown-unknown/debug/posthog_wasm.wasm ../dotnet
+cp target/wasm32-unknown-unknown/debug/posthog_wasm.wasm ../node-ts
 popd > /dev/null
