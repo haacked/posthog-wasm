@@ -70,13 +70,10 @@ public class WasmClient
         // The local 'memory' and 'allocFunc' variables used in the lambdas get their values here.
         _memory = _instance.GetMemory("memory")!;
 
-        // Use GetLength() for total size
-        Console.WriteLine($"WASM memory size: {_memory.GetLength()} bytes");
-
-        _alloc = _instance.GetFunction<int, int>("alloc")
+        _alloc = _instance.GetFunction<int, int>("alloc_buffer")
                  ?? throw new InvalidOperationException("alloc function not found");
 
-        var dealloc = _instance.GetFunction("dealloc")
+        var dealloc = _instance.GetFunction("dealloc_buffer")
             ?? throw new InvalidOperationException("dealloc function not found");
         _dealloc = dealloc.WrapAction<int, int>()
             ?? throw new InvalidOperationException("dealloc function not wrapped");
@@ -131,10 +128,11 @@ public class WasmClient
         int apiKeyPtr = _alloc(apiKeyBytes.Length);
         _memory.WriteBytes(apiKeyPtr, apiKeyBytes);
 
-        var json = await JsonSerializerHelper.SerializeToCamelCaseJsonStringAsync(properties);
-        Console.WriteLine($"TODO: Pass this JSON {json} to the WASM module");
+        var propertiesJson = await JsonSerializerHelper.SerializeToCamelCaseJsonStringAsync(properties);
+        var propertiesBytes = Encoding.UTF8.GetBytes(propertiesJson);
+        int propertiesPtr = _alloc(propertiesBytes.Length);
 
-        var captureFunc = _instance.GetFunction<int, int, int, int, int, int, int>("capture")
+        var captureFunc = _instance.GetFunction<int, int, int, int, int, int, int, int, int>("capture")
             ?? throw new InvalidOperationException("Wasm 'capture' function not found.");
 
         int resultPtr = captureFunc(
@@ -143,12 +141,14 @@ public class WasmClient
             distinctIdPtr,
             distinctIdBytes.Length,
             apiKeyPtr,
-            apiKeyBytes.Length);
+            apiKeyBytes.Length,
+            propertiesPtr,
+            propertiesBytes.Length);
 
         int responseLen = _latestHttpRequestResponseLength; // This is a guess, depends on http_post_len behavior
         if (responseLen == 0) responseLen = 2048; // Fallback to original risky assumption
 
-        string result =  _memory.ReadString(resultPtr, (uint)responseLen);
+        string result = _memory.ReadString(resultPtr, (uint)responseLen);
         _dealloc(eventPtr, eventBytes.Length);
         _dealloc(distinctIdPtr, distinctIdBytes.Length);
         _dealloc(apiKeyPtr, apiKeyBytes.Length);
@@ -183,7 +183,7 @@ public static class WasmMemoryExtensions
         // Check against total memory length before reading
         if (offset < 0 || (long)offset + length > memory.GetLength()) // Added check for negative offset
             throw new ArgumentOutOfRangeException(nameof(offset), $"Attempted to read outside WASM memory bounds. Offset: {offset}, Length: {length}, Memory Size: {memory.GetLength()}");
-        
+
         var span = memory.GetSpan(offset, (int)length); // This was already correct
         return Encoding.UTF8.GetString(span);
     }

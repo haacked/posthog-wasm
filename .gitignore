@@ -2,3 +2,6 @@
 .DS_Store
 /pkg
 /rust/target
+**/*.user
+/dotnet/bin
+/dotnet/obj

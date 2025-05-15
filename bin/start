@@ -5,7 +5,23 @@
 source bin/helpers/_utils.sh
 set_source_and_root_dir
 
+echo "-------------------------------------------"
+echo "WELCOME TO THE POSTHOG WASM HACKATHON DEMO!"
+echo "-------------------------------------------"
+
+
 bin/deploy
 pushd ./dotnet > /dev/null
+# Add this line to prompt the user
+read -p "Are you ready for the 💥?"
+
+echo "+===========================================+"
+echo "C# code calling WASM written in Rust"
+echo ""
 dotnet run
+echo "+===========================================+"
 popd > /dev/null
+
+echo "-------------------------------------------"
+echo "THANK YOU FOR WATCHING THE DEMO!"
+echo "-------------------------------------------"
