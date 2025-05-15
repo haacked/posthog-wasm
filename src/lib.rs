@@ -66,13 +66,6 @@ pub extern "C" fn capture(event_name_ptr: *const u8, event_name_len: usize,
                            distinct_id_ptr: *const u8, distinct_id_len: usize,
                            api_key_ptr: *const u8, api_key_len: usize) -> *mut u8 {
     unsafe {
-        // Prepare "POST" method string
-        let method_str = "POST";
-        let method_bytes = method_str.as_bytes();
-
-        let url_str = "http://localhost:8000/capture/"; // Standard PostHog CE/Cloud endpoint
-        let url_bytes = url_str.as_bytes();
-
         // Convert input parameters to Rust strings
         let event_name_slice = slice::from_raw_parts(event_name_ptr, event_name_len);
         let event_name = str::from_utf8(event_name_slice).unwrap_or("unknown_event");
@@ -83,23 +76,36 @@ pub extern "C" fn capture(event_name_ptr: *const u8, event_name_len: usize,
         let api_key_slice = slice::from_raw_parts(api_key_ptr, api_key_len);
         let api_key = str::from_utf8(api_key_slice).unwrap_or(""); // Default to empty if not valid UTF-8
 
-        // Construct the JSON body using the provided event name, distinct ID, and API key
-        let body_str = format!(r#"{{
-            "api_key": "{}",
-            "event": "{}",
-            "distinct_id": "{}",
-            "properties": {{
-                "$lib": "posthog-wasm",
-                "$lib_version": "0.1.0",
-                "$geoip_disabled": true
-            }}
-        }}"#, api_key, event_name, distinct_id);
-        let body_bytes = body_str.as_bytes();
+        send_event(event_name, distinct_id, api_key)
+    }
+}
 
-        // Call host with http_request, passing the defined URL and constructed body
-        let resp_ptr = http_request(url_bytes.as_ptr(), url_bytes.len(), 
-                                    method_bytes.as_ptr(), method_bytes.len(), 
-                                    body_bytes.as_ptr(), body_bytes.len());
+fn send_event(event_name: &str, distinct_id: &str, api_key: &str) -> *mut u8 {
+    let method_str = "POST";
+    let method_bytes = method_str.as_bytes();
+
+    let url_str = "http://localhost:8000/capture/"; // Standard PostHog CE/Cloud endpoint
+    let url_bytes = url_str.as_bytes();
+
+    
+    let body_str = format!(r#"{{
+        "api_key": "{}",
+        "event": "{}",
+        "distinct_id": "{}",
+        "properties": {{
+            "$lib": "posthog-wasm",
+            "$lib_version": "0.1.0",
+            "$geoip_disabled": true
+        }}
+    }}"#, api_key, event_name, distinct_id);
+    let body_bytes = body_str.as_bytes();
+
+    unsafe {
+    // Call host with http_request, passing the defined URL and constructed body
+    let resp_ptr = http_request(url_bytes.as_ptr(), url_bytes.len(), 
+                                method_bytes.as_ptr(), method_bytes.len(), 
+                                body_bytes.as_ptr(), body_bytes.len());
+                                
         let resp_len = http_request_len();
 
         let out_ptr = alloc(resp_len);
