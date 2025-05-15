@@ -111,7 +111,7 @@ fn send_event(
     let method_str = "POST";
     let method_bytes = method_str.as_bytes();
 
-    let url_str = "http://localhost:8000/capture/";
+    let url_str = "/capture";
     let url_bytes = url_str.as_bytes();
 
     // Define default PostHog properties as a serde_json::Value

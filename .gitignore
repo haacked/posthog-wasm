@@ -5,3 +5,4 @@
 **/*.user
 /dotnet/bin
 /dotnet/obj
+**/*.wasm
