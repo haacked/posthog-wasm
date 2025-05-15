@@ -6,4 +6,6 @@ source bin/helpers/_utils.sh
 set_source_and_root_dir
 
 bin/build
-cp target/wasm32-unknown-unknown/debug/posthog_wasm.wasm ../posthog-dotnet/samples/HogTied.Web/
+pushd ./rust > /dev/null
+cp target/wasm32-unknown-unknown/debug/posthog_wasm.wasm ../../posthog-dotnet/samples/HogTied.Web/
+popd > /dev/null
