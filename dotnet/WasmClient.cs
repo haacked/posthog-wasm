@@ -92,59 +92,18 @@ public class WasmClient
         _dealloc = dealloc.WrapAction<int, int>()
             ?? throw new InvalidOperationException("dealloc function not wrapped");
     }
-
-    public int Add(int a, int b)
-    {
-        var add = _instance.GetFunction<int, int, int>("add");
-        if (add is null)
-        {
-            throw new InvalidOperationException("Could not find function add");
-        }
-        return add.Invoke(a, b);
-    }
-
-    public string Greet(string input)
-    {
-        var greet = _instance.GetFunction<int, int, int>("greet")
-                    ?? throw new InvalidOperationException("Could not find function greet");
-        var greetLen = _instance.GetFunction<int, int, int>("greet_len")
-                       ?? throw new InvalidOperationException("Could not find function greet_len");
-
-        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
-
-        int inputPtr = _alloc(inputBytes.Length);
-        _memory.WriteString(inputPtr, input); // Assuming WriteString extension
-
-        int outputLen = greetLen(inputPtr, inputBytes.Length);
-        int outputPtr = greet(inputPtr, inputBytes.Length);
-
-        string result = _memory.ReadString(outputPtr, (uint)outputLen);
-
-        _dealloc(outputPtr, outputLen);
-        return result;
-    }
-
+    
     public async Task<string> CaptureAsync(
         string eventName,
         string distinctId,
         string apiKey,
         Dictionary<string, object> properties)
     {
-        var eventBytes = Encoding.UTF8.GetBytes(eventName);
-        int eventPtr = _alloc(eventBytes.Length);
-        _memory.WriteBytes(eventPtr, eventBytes);
-
-        var distinctIdBytes = Encoding.UTF8.GetBytes(distinctId);
-        int distinctIdPtr = _alloc(distinctIdBytes.Length);
-        _memory.WriteBytes(distinctIdPtr, distinctIdBytes);
-
-        var apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);
-        int apiKeyPtr = _alloc(apiKeyBytes.Length);
-        _memory.WriteBytes(apiKeyPtr, apiKeyBytes);
-
-        var propertiesJson = await JsonSerializerHelper.SerializeToCamelCaseJsonStringAsync(properties);
-        var propertiesBytes = Encoding.UTF8.GetBytes(propertiesJson);
-        int propertiesPtr = _alloc(propertiesBytes.Length);
+        var (eventBytes, eventPtr) = WriteString(eventName);
+        var (distinctIdBytes, distinctIdPtr) = WriteString(distinctId);
+        var (apiKeyBytes, apiKeyPtr) = WriteString(apiKey);
+        var propertiesJson = await JsonSerializerHelper.SerializeToCamelCaseJsonStringAsync(properties, writeIndented: true);
+        var (propertiesBytes, propertiesPtr) = WriteString(propertiesJson);
 
         var captureFunc = _instance.GetFunction<int, int, int, int, int, int, int, int, int>("capture")
             ?? throw new InvalidOperationException("Wasm 'capture' function not found.");
@@ -169,6 +128,14 @@ public class WasmClient
         _dealloc(resultPtr, responseLen); // Deallocating the result from capture
         return result;
     }
+
+    (byte[] bytes, int pointer) WriteString(string s)
+    {
+        var bytes = Encoding.UTF8.GetBytes(s);
+        var ptr = _alloc(bytes.Length);
+        _memory.WriteBytes(ptr, bytes);
+        return (bytes, ptr);
+    }
 }
 
 public static class WasmMemoryExtensions
@@ -182,14 +149,6 @@ public static class WasmMemoryExtensions
         // Get the specific span for writing
         var destination = memory.GetSpan(offset, data.Length);
         data.CopyTo(destination);
-    }
-
-    // Added WriteString for convenience, used in Greet
-    public static void WriteString(this Memory memory, int offset, string s)
-    {
-        var bytes = Encoding.UTF8.GetBytes(s);
-        // This will now call the updated WriteBytes
-        memory.WriteBytes(offset, bytes);
     }
 
     public static string ReadString(this Memory memory, int offset, uint length)
