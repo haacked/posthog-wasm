@@ -2,7 +2,7 @@
 #![no_std]
 extern crate alloc;
 
-use alloc::{format, string::String, vec::Vec};
+use alloc::{string::String, vec::Vec};
 use core::panic::PanicInfo;
 use core::{slice, str};
 
@@ -151,30 +151,6 @@ fn send_event(
 }
 
 #[no_mangle]
-pub extern "C" fn greet(ptr: *mut u8, len: usize) -> *mut u8 {
-    let input = unsafe { str::from_utf8_unchecked(slice::from_raw_parts(ptr, len)) };
-    let result = format!("Hello, {}!", input);
-    let output = result.into_bytes();
-    let out_ptr = alloc_buffer(output.len());
-    unsafe {
-        core::ptr::copy_nonoverlapping(output.as_ptr(), out_ptr, output.len());
-    }
-    out_ptr
-}
-
-#[no_mangle]
-pub extern "C" fn greet_len(ptr: *mut u8, len: usize) -> usize {
-    let input = unsafe { str::from_utf8_unchecked(slice::from_raw_parts(ptr, len)) };
-    let result = format!("Hello, {}!", input);
-    result.len()
-}
-
-#[no_mangle]
-pub extern "C" fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
-
-#[no_mangle]
 pub extern "C" fn request(
     url_ptr: *const u8,
     url_len: usize,
@@ -192,16 +168,5 @@ pub extern "C" fn request(
         let out_ptr = alloc_buffer(resp_len);
         core::ptr::copy_nonoverlapping(resp_ptr, out_ptr, resp_len);
         out_ptr
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
     }
 }

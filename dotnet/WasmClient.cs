@@ -37,6 +37,10 @@ public class WasmClient
                 {
                     var requestBodyBytes = new byte[bodyLen];
                     memory.ReadBytes(bodyPtr, requestBodyBytes); // Use local 'memory'
+
+                    var requestBodyJson = JsonSerializerHelper.FormatJson(Encoding.UTF8.GetString(requestBodyBytes));
+                    Console.WriteLine("Request Body JSON: \n" + requestBodyJson);
+
                     requestMessage.Content = new ByteArrayContent(requestBodyBytes);
                     requestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 }
@@ -181,7 +185,7 @@ public static class WasmMemoryExtensions
     public static string ReadString(this Memory memory, int offset, uint length)
     {
         // Check against total memory length before reading
-        if (offset < 0 || (long)offset + length > memory.GetLength()) // Added check for negative offset
+        if (offset < 0 || offset + length > memory.GetLength()) // Added check for negative offset
             throw new ArgumentOutOfRangeException(nameof(offset), $"Attempted to read outside WASM memory bounds. Offset: {offset}, Length: {length}, Memory Size: {memory.GetLength()}");
 
         var span = memory.GetSpan(offset, (int)length); // This was already correct

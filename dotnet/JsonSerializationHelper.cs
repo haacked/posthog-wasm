@@ -7,7 +7,7 @@ namespace PostHog.Json;
 
 internal static class JsonSerializerHelper
 {
-    internal static readonly JsonSerializerOptions Options = new()
+    static readonly JsonSerializerOptions Options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
@@ -17,6 +17,12 @@ internal static class JsonSerializerHelper
             new ReadOnlyDictionaryJsonConverterFactory()
         }
     };
+
+    public static string FormatJson(string json)
+    {
+        using var jsonDoc = JsonDocument.Parse(json);
+        return JsonSerializer.Serialize(jsonDoc.RootElement, IndentedOptions);
+    }
 
     static readonly JsonSerializerOptions IndentedOptions = new(Options)
     {
