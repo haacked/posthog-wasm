@@ -67,6 +67,16 @@ public class WasmClient
             () => _latestHttpRequestResponseLength // Access field
         ));
 
+        linker.Define(
+            "env", "log_message",
+            Function.FromCallback<int, int>(store, (int messagePtr, int messageLen) =>
+            {
+                var memory = _memory ?? throw new InvalidOperationException("memory is null");
+                var message = memory.ReadString(messagePtr, (uint)messageLen);
+                Console.WriteLine($"WASM log: {message}");
+            })
+        );
+
         // 👇 Now instantiate
         _instance = linker.Instantiate(store, module);
 
