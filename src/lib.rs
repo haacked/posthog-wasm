@@ -55,29 +55,74 @@ pub extern "C" fn add(a: i32, b: i32) -> i32 {
 }
 
 extern "C" {
-    fn http_post(ptr: *const u8, len: usize) -> u32;
-    fn http_post_len() -> usize;
+    fn http_request(url_ptr: *const u8, url_len: usize, 
+                    method_ptr: *const u8, method_len: usize, 
+                    body_ptr: *const u8, body_len: usize) -> *const u8;
+    fn http_request_len() -> usize;
 }
+
 #[no_mangle]
-pub extern "C" fn capture(ptr: *const u8, len: usize) -> *mut u8 {
+pub extern "C" fn capture(event_name_ptr: *const u8, event_name_len: usize,
+                           distinct_id_ptr: *const u8, distinct_id_len: usize,
+                           api_key_ptr: *const u8, api_key_len: usize) -> *mut u8 {
     unsafe {
-        // Read input URL
-        let input = str::from_utf8_unchecked(slice::from_raw_parts(ptr, len));
+        // Prepare "POST" method string
+        let method_str = "POST";
+        let method_bytes = method_str.as_bytes();
 
-        // Call host
-        let resp_ptr = http_post(ptr, len);
-        let resp_len = http_post_len();
+        let url_str = "http://localhost:8000/capture/"; // Standard PostHog CE/Cloud endpoint
+        let url_bytes = url_str.as_bytes();
 
-        // Read host's response
-        let resp = slice::from_raw_parts(resp_ptr as *const u8, resp_len);
-        let result = format!("Captured from {}:\n{}", input, str::from_utf8_unchecked(resp));
+        // Convert input parameters to Rust strings
+        let event_name_slice = slice::from_raw_parts(event_name_ptr, event_name_len);
+        let event_name = str::from_utf8(event_name_slice).unwrap_or("unknown_event");
 
-        let out_ptr = alloc(result.len());
-        core::ptr::copy_nonoverlapping(result.as_ptr(), out_ptr, result.len());
+        let distinct_id_slice = slice::from_raw_parts(distinct_id_ptr, distinct_id_len);
+        let distinct_id = str::from_utf8(distinct_id_slice).unwrap_or("unknown_distinct_id");
+        
+        let api_key_slice = slice::from_raw_parts(api_key_ptr, api_key_len);
+        let api_key = str::from_utf8(api_key_slice).unwrap_or(""); // Default to empty if not valid UTF-8
+
+        // Construct the JSON body using the provided event name, distinct ID, and API key
+        let body_str = format!(r#"{{
+            "api_key": "{}",
+            "event": "{}",
+            "distinct_id": "{}",
+            "properties": {{
+                "$lib": "posthog-wasm",
+                "$lib_version": "0.1.0",
+                "$geoip_disabled": true
+            }}
+        }}"#, api_key, event_name, distinct_id);
+        let body_bytes = body_str.as_bytes();
+
+        // Call host with http_request, passing the defined URL and constructed body
+        let resp_ptr = http_request(url_bytes.as_ptr(), url_bytes.len(), 
+                                    method_bytes.as_ptr(), method_bytes.len(), 
+                                    body_bytes.as_ptr(), body_bytes.len());
+        let resp_len = http_request_len();
+
+        let out_ptr = alloc(resp_len);
+        core::ptr::copy_nonoverlapping(resp_ptr, out_ptr, resp_len);
         out_ptr
     }
 }
 
+#[no_mangle]
+pub extern "C" fn request(url_ptr: *const u8, url_len: usize, 
+                           method_ptr: *const u8, method_len: usize, 
+                           body_ptr: *const u8, body_len: usize) -> *mut u8 {
+    unsafe {
+        // Call host
+        let resp_ptr = http_request(url_ptr, url_len, method_ptr, method_len, body_ptr, body_len);
+        let resp_len = http_request_len();
+
+        // Allocate memory for the response and copy it
+        let out_ptr = alloc(resp_len);
+        core::ptr::copy_nonoverlapping(resp_ptr, out_ptr, resp_len);
+        out_ptr
+    }
+}
 
 #[cfg(test)]
 mod tests {
