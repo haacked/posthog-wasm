@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "upnTwugOmAU=",
+  "success": true,
+  "projectFilePath": "/Users/haacked/dev/posthog/posthog-wasm/dotnet/dotnet.csproj",
+  "expectedPackageFiles": [
+    "/Users/haacked/.nuget/packages/system.text.json/9.0.5/system.text.json.9.0.5.nupkg.sha512",
+    "/Users/haacked/.nuget/packages/wasmtime/22.0.0/wasmtime.22.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

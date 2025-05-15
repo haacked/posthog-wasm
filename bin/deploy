@@ -7,5 +7,5 @@ set_source_and_root_dir
 
 bin/build
 pushd ./rust > /dev/null
-cp target/wasm32-unknown-unknown/debug/posthog_wasm.wasm ../../posthog-dotnet/samples/HogTied.Web/
+cp target/wasm32-unknown-unknown/debug/posthog_wasm.wasm ../dotnet
 popd > /dev/null

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#/ Usage: bin/deploy [<configuration>]
+#/ Description: Builds the wasm file and deploys it to my sample project
+
+source bin/helpers/_utils.sh
+set_source_and_root_dir
+
+bin/deploy
+pushd ./dotnet > /dev/null
+dotnet run
+popd > /dev/null
