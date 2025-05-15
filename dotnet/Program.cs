@@ -16,11 +16,12 @@ if (!Uri.TryCreate(host, UriKind.Absolute, out var hostUri))
 
 var wasmClient = new WasmClient(hostUri);
 var result = await wasmClient.CaptureAsync(
-    eventName: "test_event",
+    eventName: "$pageview",
     distinctId: "distinct_id_123",
     apiKey: apiKey,
     properties: new()
     {
+        ["$current_url"] = "/tulum-hackathon",
         ["plan"] = "pro",
         ["paid"] = "you know it!"
     });

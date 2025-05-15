@@ -13,7 +13,6 @@ We considered compiling Rust to portable libraries, but each library has to be.
 - Sidecar service (called through http):
 - Compile to platform specific dlls: deployment is painful.
 
-
 ## Lessons learned
 
 ### ✅ 1. Use the `wasm32-unknown-unknown` Target
@@ -118,3 +117,21 @@ Use:
 ### 🧪 Optional: Use WIT for Cross-Language Type Safety (Future-Focused)
 
 WIT (WebAssembly Interface Types) + wit-bindgen can generate bindings for Rust, C#, JS, etc. automatically — _but it’s early-stage and not as portable yet as low-level FFI_. We chose not to use it yet because it's not well supported.
+
+## Conclusions
+
+Implementing a WASM client in Rust that's easy to call from other platforms is very doable, but challenging.
+
+The issues:
+
+1. `no_std` means we can't use the standard library and write idiomatic Rust. It makes things complicated. For example, we have to stick to primitive types in exported functions:
+
+`i32`, `i64`, `f32`, `f64`, `*const u8`, `usize`
+
+And pass more complex types via memory (pointers to serialized strings or structs)
+
+2. We could use `wasm-bindgen` to bind to JS environments, but that doesn't help for non-JS platforms.
+
+3. `wit-bindgen` and the Component Model are interesting, but they're not well supported yet. It would allow us to define structured interfaces and then generate bindings for different languages.
+
+So in-conclusion, WASM is definitely promising as a means of not having to write PHP ever again, but it's not ready for prime time yet. We should wait till there's broad support for `wit-bindgen` and the Component Model.
