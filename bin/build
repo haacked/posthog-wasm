@@ -6,4 +6,6 @@
 source bin/helpers/_utils.sh
 set_source_and_root_dir
 
+pushd rust > /dev/null
 cargo build --target wasm32-unknown-unknown
+popd > /dev/null
