@@ -26,6 +26,14 @@ read -p "Are you ready for the 💥?"
 echo "+===========================================+"
 echo "C# code calling WASM written in Rust"
 dotnet run "$POSTHOG_HOST" "$POSTHOG_API_KEY"
+popd > /dev/null
+
+echo "+===========================================+"
+
+pushd ./node-ts > /dev/null
+echo "Node.js code calling WASM written in Rust"
+echo ""
+bun run src/index.ts "$POSTHOG_HOST" "$POSTHOG_API_KEY"
 echo "+===========================================+"
 popd > /dev/null
 
