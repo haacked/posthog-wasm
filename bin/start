@@ -5,6 +5,14 @@
 source bin/helpers/_utils.sh
 set_source_and_root_dir
 
+# Default values
+DEFAULT_POSTHOG_HOST="http://localhost:8000"
+DEFAULT_POSTHOG_API_KEY="phc_jtUhKM2jBb9bN31USuNxqs2IiR2w43EgqC6AY4iaWVo"
+
+# Use provided arguments or defaults
+POSTHOG_HOST="${1:-$DEFAULT_POSTHOG_HOST}"
+POSTHOG_API_KEY="${2:-$DEFAULT_POSTHOG_API_KEY}"
+
 echo "-------------------------------------------"
 echo "WELCOME TO THE POSTHOG WASM HACKATHON DEMO!"
 echo "-------------------------------------------"
@@ -17,8 +25,7 @@ read -p "Are you ready for the 💥?"
 
 echo "+===========================================+"
 echo "C# code calling WASM written in Rust"
-echo ""
-dotnet run
+dotnet run "$POSTHOG_HOST" "$POSTHOG_API_KEY"
 echo "+===========================================+"
 popd > /dev/null
 

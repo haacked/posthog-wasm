@@ -13,7 +13,7 @@ public class WasmClient
     readonly Action<int, int> _dealloc;
     int _latestHttpRequestResponseLength;
 
-    public WasmClient()
+    public WasmClient(Uri hostUri)
     {
         var engine = new Engine();
         var module = Module.FromFile(engine, "posthog_wasm.wasm");
@@ -26,13 +26,14 @@ public class WasmClient
             {
                 var allocFunc = _alloc ?? throw new InvalidOperationException("alloc function is null");
                 var memory = _memory ?? throw new InvalidOperationException("memory is null");
-                var url = memory.ReadString(urlPtr, (uint)urlLen); // Use local 'memory'
+                var urlPath = memory.ReadString(urlPtr, (uint)urlLen); // Use local 'memory'
                 var method = memory.ReadString(methodPtr, (uint)methodLen); // Use local 'memory'
-
                 using var httpClient = new HttpClient();
                 var httpMethod = new HttpMethod(method.Trim().ToUpperInvariant());
-                var requestMessage = new HttpRequestMessage(httpMethod, url);
+                var url = new Uri(hostUri, urlPath);
 
+                Console.WriteLine($"{method} {url}");
+                var requestMessage = new HttpRequestMessage(httpMethod, url);
                 if (bodyLen > 0)
                 {
                     var requestBodyBytes = new byte[bodyLen];
@@ -69,7 +70,7 @@ public class WasmClient
 
         linker.Define(
             "env", "log_message",
-            Function.FromCallback<int, int>(store, (int messagePtr, int messageLen) =>
+            Function.FromCallback(store, (int messagePtr, int messageLen) =>
             {
                 var memory = _memory ?? throw new InvalidOperationException("memory is null");
                 var message = memory.ReadString(messagePtr, (uint)messageLen);
