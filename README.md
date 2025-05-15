@@ -134,4 +134,6 @@ And pass more complex types via memory (pointers to serialized strings or struct
 
 3. `wit-bindgen` and the Component Model are interesting, but they're not well supported yet. It would allow us to define structured interfaces and then generate bindings for different languages.
 
+4. WASM is synchronous by default, so unclear how to implement async operations.
+
 So in-conclusion, WASM is definitely promising as a means of not having to write PHP ever again, but it's not ready for prime time yet. We should wait till there's broad support for `wit-bindgen` and the Component Model.
